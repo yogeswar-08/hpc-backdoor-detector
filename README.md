@@ -1,7 +1,7 @@
-# Detection of Backdoor Attacks Using HPCs
+# Suraksha
 
-This folder is a self-contained, dependency-free submission for Problem 1 of
-the hackathon. It learns the normal hardware-performance-counter (HPC) profile
+Suraksha is a self-contained, dependency-free submission for Problem 1 of the
+hackathon. It learns the normal hardware-performance-counter (HPC) profile
 from clean inferences, then flags unusually distant rows as possible
 `backdoor` examples.
 
@@ -9,7 +9,7 @@ from clean inferences, then flags unusually distant rows as possible
 
 - `detector.py` — training and prediction command-line program
 - `clean_training.csv` — supplied clean training examples
-- `model.json` — final model trained on the supplied clean CSV
+- `suraksha_model.json` — final model trained on the supplied clean CSV
 - `report.pdf` — short technical report
 - `report.md` — editable source for the report
 - `make_report_pdf.py` — dependency-free helper to regenerate the PDF
@@ -45,7 +45,7 @@ Train the included final model from the supplied clean data:
 ```bash
 python3 detector.py train \
   --input clean_training.csv \
-  --model model.json
+  --model suraksha_model.json
 ```
 
 The final checked-in model was trained on 800 rows and uses a threshold of
@@ -57,7 +57,7 @@ To score another CSV:
 ```bash
 python3 detector.py predict \
   --input validation.csv \
-  --model model.json \
+  --model suraksha_model.json \
   --output predictions.csv
 ```
 
