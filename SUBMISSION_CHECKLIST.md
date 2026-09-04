@@ -6,7 +6,7 @@ Upload these files from the `hackathon_solution` folder:
 
 - `detector.py`
 - `clean_training.csv`
-- `model.json`
+- `suraksha_model.json`
 - `README.md`
 - `report.md`
 - `report.pdf`
