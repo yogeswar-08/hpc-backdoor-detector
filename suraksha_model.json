@@ -1,0 +1,21 @@
+{
+  "method": "robust_squared_z_distance",
+  "columns": [
+    "cache-references",
+    "cycles",
+    "LLC-loads"
+  ],
+  "centres": [
+    183919637.5,
+    4772836025.0,
+    6656922.5
+  ],
+  "scales": [
+    4383132.6945,
+    24477339.0414,
+    232152.17969999998
+  ],
+  "threshold_percentile": 0.995,
+  "threshold": 19.742106742377825,
+  "training_rows": 800
+}
