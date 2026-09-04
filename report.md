@@ -1,8 +1,8 @@
-# Detecting Backdoor Attacks with Hardware Performance Counters
+# Suraksha — Detecting Backdoor Attacks with Hardware Performance Counters
 
 ## Summary
 
-This submission treats the hackathon task as **clean-only anomaly detection**.
+Suraksha treats the hackathon task as **clean-only anomaly detection**.
 The supplied training file contains normal model inferences but no labeled
 backdoor examples. The detector learns a robust profile of the clean
 hardware-performance counters (HPCs), assigns every new inference an anomaly
@@ -58,17 +58,17 @@ similar to training.
 From the repository root:
 
 ```bash
-python3 hackathon_solution/detector.py train \
-  --input attached_assets/trace_1788529753382.csv \
-  --model hackathon_solution/model.json
+python3 detector.py train \
+  --input clean_training.csv \
+  --model suraksha_model.json
 ```
 
 To score a validation file:
 
 ```bash
-python3 hackathon_solution/detector.py predict \
+python3 detector.py predict \
   --input validation.csv \
-  --model hackathon_solution/model.json \
+  --model suraksha_model.json \
   --output predictions.csv
 ```
 
