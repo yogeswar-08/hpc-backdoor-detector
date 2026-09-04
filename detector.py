@@ -179,7 +179,7 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument("--input", required=True, help="clean training CSV")
     train_parser.add_argument(
         "--model",
-        default="model.json",
+        default="suraksha_model.json",
         help="where to save the learned model",
     )
     train_parser.add_argument(
@@ -197,7 +197,7 @@ def build_parser() -> argparse.ArgumentParser:
     predict_parser.add_argument("--input", required=True, help="CSV to score")
     predict_parser.add_argument(
         "--model",
-        default="model.json",
+        default="suraksha_model.json",
         help="saved model file",
     )
     predict_parser.add_argument(
