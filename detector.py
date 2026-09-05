@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""
-Beginner-friendly clean-only anomaly detector for the HPC hackathon problem.
-
-The training CSV contains only clean examples. We learn the normal centre and
-spread of every HPC counter, then give each new row an anomaly score.
-"""
+"""Train a clean HPC baseline and flag unusually distant rows."""
 
 import argparse
 import csv
@@ -16,7 +11,7 @@ from typing import Any
 
 
 def read_csv(path: str, wanted_columns: list[str] | None = None) -> tuple[list[str], list[list[float]]]:
-    """Read numeric HPC columns from a CSV file."""
+    """Read the requested numeric columns from a CSV file."""
     with open(path, "r", newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         if not reader.fieldnames:
@@ -53,7 +48,7 @@ def read_csv(path: str, wanted_columns: list[str] | None = None) -> tuple[list[s
 
 
 def percentile(values: list[float], fraction: float) -> float:
-    """Calculate a percentile without requiring external Python packages."""
+    """Calculate a percentile using linear interpolation."""
     ordered = sorted(values)
     position = (len(ordered) - 1) * fraction
     lower = math.floor(position)
@@ -69,12 +64,7 @@ def fit_model(
     values: list[list[float]],
     threshold_percentile: float,
 ) -> dict[str, Any]:
-    """
-    Learn a robust normal profile.
-
-    Median and MAD are used instead of only mean and standard deviation because
-    a few unusual clean measurements should not move the normal profile too far.
-    """
+    """Build a median/MAD profile from clean rows."""
     centres = [statistics.median(column) for column in zip(*values)]
     scales: list[float] = []
 
@@ -86,7 +76,7 @@ def fit_model(
         mad = statistics.median(deviations)
         scale = 1.4826 * mad
 
-        # A completely flat counter needs a small fallback scale.
+        # A constant counter has no MAD, so use a small fallback scale.
         if scale <= 1e-12:
             column_values = [row[column_index] for row in values]
             scale = statistics.pstdev(column_values) or 1.0
@@ -114,7 +104,7 @@ def anomaly_score(
     centres: list[float],
     scales: list[float],
 ) -> float:
-    """Return a larger score when a row is farther from normal."""
+    """Return the squared standardized distance from the baseline."""
     return sum(
         ((value - centre) / scale) ** 2
         for value, centre, scale in zip(row, centres, scales)
@@ -167,14 +157,12 @@ def predict(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Clean-only HPC anomaly detector"
-    )
+    parser = argparse.ArgumentParser(description="HPC anomaly detector")
     commands = parser.add_subparsers(dest="command", required=True)
 
     train_parser = commands.add_parser(
         "train",
-        help="learn normal behaviour from a clean CSV",
+        help="learn a baseline from a clean CSV",
     )
     train_parser.add_argument("--input", required=True, help="clean training CSV")
     train_parser.add_argument(
@@ -192,7 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     predict_parser = commands.add_parser(
         "predict",
-        help="score a new CSV using a saved model",
+        help="score a CSV with a saved model",
     )
     predict_parser.add_argument("--input", required=True, help="CSV to score")
     predict_parser.add_argument(
