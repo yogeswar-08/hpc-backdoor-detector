@@ -1,8 +1,8 @@
-# Beginner Submission Checklist
+# Submission checklist
 
-## Files to upload to GitHub
+## Files
 
-Upload these files from the `hackathon_solution` folder:
+The repository should contain:
 
 - `detector.py`
 - `clean_training.csv`
@@ -12,43 +12,22 @@ Upload these files from the `hackathon_solution` folder:
 - `report.pdf`
 - `.gitignore`
 
-Do not upload `__pycache__` or temporary prediction files.
+Do not commit `__pycache__` or generated prediction files unless the submission rules ask for them.
 
-## Create the GitHub repository
+## Before submitting
 
-1. Open `https://github.com`.
-2. Sign in or create a GitHub account.
-3. Tap the **+** button in the top-right corner.
-4. Choose **New repository**.
-5. Use a name such as `hpc-backdoor-detector`.
-6. Choose **Public**, unless the hackathon instructions specifically require
-   Private.
-7. Tick **Add a README file**.
-8. Tap **Create repository**.
+1. From the repository root, rebuild the model:
 
-## Upload the project
+   ```bash
+   python3 detector.py train --input clean_training.csv --model suraksha_model.json
+   ```
 
-1. Open the new repository.
-2. Choose **Add file**.
-3. Choose **Upload files**.
-4. Select the six files listed above.
-5. Scroll down to the commit box.
-6. Type: `Add HPC backdoor detector`
-7. Tap **Commit changes**.
+2. Check that the model file contains the expected columns, training row count, and threshold.
+3. Run a prediction on the organiser's validation file when it is available.
+4. Check the required prediction-column names against the submission instructions.
 
-If GitHub does not show hidden files such as `.gitignore`, upload the other
-files first and add `.gitignore` separately.
+## GitHub
 
-## What to say during the presentation
+Create the repository, upload the files above, and use a commit message that describes the change. Keep the repository visibility and final prediction format aligned with the hackathon rules.
 
-> We used clean-only anomaly detection because the training data contains no
-> backdoor examples. The system learns the normal median and variation of
-> hardware performance counters. For each new inference, it calculates a
-> distance from that normal profile. A high distance is reported as a possible
-> backdoor inference.
-
-## Important honesty point
-
-Do not claim a final accuracy score until the organizers provide labelled
-validation data or the official evaluation result. The uploaded CSV contains
-clean training examples only.
+The clean training file by itself is not enough to claim a detection accuracy. That requires labelled evaluation data from the organisers.
