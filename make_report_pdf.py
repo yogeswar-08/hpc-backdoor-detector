@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Create report.pdf from report.md using Chromium's print-to-PDF support.
-
-This helper intentionally has no Python package dependencies. Chromium is
-available in the Replit environment and can also be replaced by any browser
-that supports headless PDF printing.
-"""
+"""Convert report.md to report.pdf with a headless Chromium browser."""
 
 from pathlib import Path
 import html
@@ -19,7 +14,7 @@ OUTPUT = ROOT / "report.pdf"
 
 
 def markdown_to_html(markdown: str) -> str:
-    """Convert the small, fixed report vocabulary to readable HTML."""
+    """Convert the small report format used by report.md to HTML."""
     blocks: list[str] = []
     paragraph: list[str] = []
     in_code = False
@@ -71,15 +66,16 @@ def markdown_to_html(markdown: str) -> str:
             if not in_list:
                 blocks.append("<ol>")
                 in_list = True
-            item = line[3:]
-            item = html.escape(item).replace("`", "<code>", 1).replace("`", "</code>", 1)
+            item = html.escape(line[3:])
+            item = item.replace("`", "<code>", 1).replace("`", "</code>", 1)
             blocks.append(f"<li>{item}</li>")
         elif line.startswith("- "):
             flush_paragraph()
             if not in_list:
                 blocks.append("<ol>")
                 in_list = True
-            item = html.escape(line[2:]).replace("`", "<code>", 1).replace("`", "</code>", 1)
+            item = html.escape(line[2:])
+            item = item.replace("`", "<code>", 1).replace("`", "</code>", 1)
             blocks.append(f"<li>{item}</li>")
         else:
             paragraph.append(line)
