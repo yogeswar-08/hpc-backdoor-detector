@@ -1,59 +1,33 @@
-# Suraksha — Detecting Backdoor Attacks with Hardware Performance Counters
+# Suraksha: HPC-based backdoor screening
 
-## Summary
+## Overview
 
-Suraksha treats the hackathon task as **clean-only anomaly detection**.
-The supplied training file contains normal model inferences but no labeled
-backdoor examples. The detector learns a robust profile of the clean
-hardware-performance counters (HPCs), assigns every new inference an anomaly
-score, and labels unusually distant rows as possible `backdoor` cases.
+For this submission, I treated the problem as clean-only anomaly detection. The training file has normal inference runs but no labelled backdoor runs, so there is no attack class to train a conventional classifier on. Instead, Suraksha builds a profile of the clean measurements and flags rows that are unusually far from that profile.
 
-The final model was trained on 800 clean rows with these counters:
-`cache-references`, `cycles`, and `LLC-loads`. Its alert threshold is
-**19.742107**, the **99.5th percentile** of the clean training scores.
+The training file contains 800 rows and three hardware performance counters: `cache-references`, `cycles`, and `LLC-loads`. The checked-in model uses an alert threshold of `19.742107`, the 99.5th percentile of the scores on those clean rows.
 
-## Why HPCs are useful
+## Why use hardware counters?
 
-Hardware performance counters are CPU measurements collected while a program
-runs. They include events such as cache activity and processor cycles. A
-backdoor can change the work performed during an inference—for example, by
-executing an additional trigger check or taking a different computation path.
-Those changes may leave a measurable execution footprint even when the model's
-ordinary output looks unchanged. HPCs therefore provide a low-level signal for
-detecting behavior that is unusual relative to clean executions.
+Hardware performance counters measure what the processor is doing while an inference runs. Cache activity and cycle counts can change when code takes an extra branch or performs additional work. A backdoor may therefore leave a hardware-level trace even when the model returns an ordinary-looking result.
 
-The counters are not a security proof: operating-system activity, hardware
-variation, input complexity, and measurement noise can also change them. The
-detector uses them as evidence of unusual behavior.
+That signal is not proof of a backdoor. Operating-system activity, input difficulty, hardware differences, and measurement noise can all move the counters. The detector should be read as a screening step for unusual executions.
 
-## Method
+## Scoring method
 
-The program is implemented in `detector.py` using only Python's standard
-library:
+The program in `detector.py` uses only Python's standard library:
 
-1. Read the numeric HPC columns from a clean CSV.
-2. Estimate each counter's normal centre with its **median**.
-3. Estimate each counter's spread with `1.4826 × MAD` (median absolute
-   deviation). This robust scale is less sensitive to extreme observations
-   than a mean and standard deviation. A population-standard-deviation
-   fallback is used for a flat counter.
-4. For a row with counter values \(x_i\), centre \(m_i\), and scale \(s_i\),
-   calculate:
+1. Read the three numeric counter columns from the clean CSV.
+2. Use the median of each column as its clean baseline.
+3. Use `1.4826 × MAD` (median absolute deviation) as the spread. If a column is flat, fall back to its population standard deviation and then to `1.0`.
+4. For every row, add the squared standardized distance for each counter:
 
-   \[
-   \text{score}(x) = \sum_i \left(\frac{x_i-m_i}{s_i}\right)^2
-   \]
+   `score = sum(((value - median) / scale) ** 2)`
 
-5. Set the threshold to the 99.5th percentile of the clean training scores.
-   A new row is labeled `backdoor` when `score > threshold`; otherwise it is
-   labeled `clean`.
+5. Mark a row as `backdoor` only when its score is strictly greater than the 99.5th-percentile threshold. Otherwise it is `clean`.
 
-The squared standardized distance puts counters on comparable scales and
-combines their evidence into one score. The high percentile is intended to
-keep the expected clean alert rate low when the future clean distribution is
-similar to training.
+Using the median and MAD makes the baseline less sensitive to a few unusual clean measurements than a mean and standard deviation would be. Squaring and adding the normalized distances also puts the three counters on a common scale.
 
-## Reproduction
+## Reproducing the result
 
 From the repository root:
 
@@ -63,7 +37,7 @@ python3 detector.py train \
   --model suraksha_model.json
 ```
 
-To score a validation file:
+To score another file:
 
 ```bash
 python3 detector.py predict \
@@ -72,20 +46,10 @@ python3 detector.py predict \
   --output predictions.csv
 ```
 
-No third-party packages are required. The output records the source
-`row_number`, the numeric `anomaly_score`, and a `prediction` of `clean` or
-`backdoor`.
+The input file must use the same three column names. The output records the source row number, the anomaly score, and the prediction.
 
-## Limitations and next steps
+## Limitations
 
-The clean file alone cannot measure recall or distinguish a real backdoor from
-an unusual but legitimate execution. The threshold is a clean-distribution
-calibration choice, not a learned attack boundary. If clean conditions drift,
-the false-positive rate can change.
+The clean file alone cannot measure recall, F1, AUROC, or the true false-positive rate. Those numbers require labelled evaluation data. A high score can mean an unusual but legitimate execution, not necessarily an attack.
 
-The current score treats rows independently and does not model correlations
-between counters, sequence information, input metadata, or repeated-run
-variation. It also uses only the three supplied counters. Labeled organizer
-validation data should be used to select the threshold against the required
-metric and to measure accuracy, TPR, FPR, F1, and AUROC. The final predictions
-should then be exported in the organizers' required schema.
+The current implementation scores rows independently. It does not model correlations between counters, sequences over time, input metadata, or repeated measurements of the same inference. It also assumes that future clean runs look reasonably similar to the training data. If labelled validation data becomes available, it should be used to choose the threshold and measure the detector against the required metric.
